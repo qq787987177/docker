@@ -1,0 +1,87 @@
+version: '2'
+services:
+  php:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/php-symfony:2.0
+    container_name: php
+    tty: true
+    volumes:
+      - '/f/workspace:/usr/share/nginx/html'
+      - './log:/dev/shm'
+      - './authorized_keys:/home/webid/.ssh/authorized_keys'
+      - './authorized_keys:/root/.ssh/authorized_keys'
+    networks:
+      comm:
+        aliases:
+          - php
+    ports:
+     - "23:22"
+     - "8000:8000"
+  php-old:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/php:5.6.9
+    tty: true
+    volumes_from:
+      - php
+    networks:
+      comm:
+        aliases:
+          - php-old
+  nginx:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/nginx
+    tty: true
+    volumes_from:
+      - php
+    volumes:
+      - './log:/var/logs/nginx_logs/'
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/crt:/etc/nginx/crt
+    networks:
+      comm:
+        aliases:
+          - nginx
+    ports:
+     - "80:80"
+     - "443:443"
+  redis:
+    image: redis
+    tty: true
+    networks:
+      comm:
+        aliases:
+          - redis
+    ports:
+      - "127.0.0.1:6379:6379"
+  memcached:
+    image: memcached
+    tty: true
+    networks:
+      comm:
+        aliases:
+          - memcached
+    ports:
+      - "127.0.0.1:11211:11211"
+  mysql:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/mysql:5.6.35
+    tty: true
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+    networks:
+      comm:
+        aliases:
+          - mysql
+    ports:
+      - "127.0.0.1:3307:3306"
+    environment:
+        - MYSQL_ROOT_PASSWORD=123456
+  elasticsearch:
+    image: elasticsearch:5.2.2
+    tty: true
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      comm:
+        aliases:
+          - elasticsearch
+    ports:
+      - "127.0.0.1:9200:9200"
+networks:
+    comm:

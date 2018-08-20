@@ -1,0 +1,70 @@
+version: '2'
+services:
+  php:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/php:test
+    volumes:
+      - '/c/workspace/:/usr/share/nginx/html'
+      - './log:/dev/shm'
+    networks:
+      comm:
+        aliases:
+          - php
+    restart: always
+  php-old:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/php:5.6.9
+    volumes_from:
+      - php
+    networks:
+      comm:
+        aliases:
+          - php-old
+    restart: always
+  nginx:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/nginx
+    volumes_from:
+      - php
+    volumes:
+      - './log:/var/logs/nginx_logs/'
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/crt:/etc/nginx/crt
+    networks:
+      comm:
+        aliases:
+          - nginx
+    restart: always
+    ports:
+     - "80:80"
+     - "443:443"
+  redis:
+    image: redis
+    networks:
+      comm:
+        aliases:
+          - redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: always
+  memcached:
+    image: memcached
+    networks:
+      comm:
+        aliases:
+          - memcached
+    ports:
+      - "127.0.0.1:11211:11211"
+    restart: always
+  mysql:
+    image: registry.cn-hangzhou.aliyuncs.com/sdxapp/mysql:5.6.35
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+    networks:
+      comm:
+        aliases:
+          - mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+        - MYSQL_ROOT_PASSWORD=123456
+    restart: always
+networks:
+    comm:
